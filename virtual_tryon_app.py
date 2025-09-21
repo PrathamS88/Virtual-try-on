@@ -852,6 +852,7 @@ def main():
             <div class="step-item">Try different poses or lighting for more variations</div>
             <div class="step-item">Use the result for your product listings or marketing</div>
         </div>
+        """, unsafe_allow_html=True)
     
     st.markdown('</div>', unsafe_allow_html=True)  # Close main container
 
