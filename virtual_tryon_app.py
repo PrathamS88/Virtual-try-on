@@ -13,7 +13,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Custom CSS for Meesho-style interface
+# Custom CSS for Meesho-style interface with compact images
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -62,9 +62,9 @@ st.markdown("""
     .upload-card {
         background: white;
         border-radius: 12px;
-        padding: 2rem;
+        padding: 1.5rem;
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        margin-bottom: 2rem;
+        margin-bottom: 1rem;
         border: 2px dashed #9333ea;
         text-align: center;
         transition: all 0.3s ease;
@@ -78,31 +78,57 @@ st.markdown("""
     .garment-card {
         background: white;
         border-radius: 12px;
-        padding: 2rem;
+        padding: 1.5rem;
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        margin-bottom: 2rem;
+        margin-bottom: 1rem;
         border: 2px solid #34d399;
         text-align: center;
     }
     
     .upload-title {
         color: #9333ea;
-        font-size: 1.2rem;
+        font-size: 1.1rem;
         font-weight: 600;
         margin-bottom: 0.5rem;
     }
     
     .garment-title {
         color: #34d399;
-        font-size: 1.2rem;
+        font-size: 1.1rem;
         font-weight: 600;
         margin-bottom: 0.5rem;
     }
     
     .upload-subtitle {
         color: #6b7280;
-        font-size: 0.9rem;
+        font-size: 0.85rem;
         margin-bottom: 1rem;
+    }
+    
+    /* Compact image styles */
+    .stImage {
+        max-width: 100% !important;
+    }
+    
+    .stImage > div {
+        display: flex !important;
+        justify-content: center !important;
+    }
+    
+    .stImage img {
+        max-width: 280px !important;
+        max-height: 350px !important;
+        width: auto !important;
+        height: auto !important;
+        object-fit: contain !important;
+        border-radius: 8px !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+    }
+    
+    /* Special styling for result image to be slightly larger */
+    .result-image img {
+        max-width: 320px !important;
+        max-height: 400px !important;
     }
     
     .camera-options {
@@ -135,14 +161,14 @@ st.markdown("""
     .result-card {
         background: white;
         border-radius: 12px;
-        padding: 2rem;
+        padding: 1.5rem;
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        margin-bottom: 2rem;
+        margin-bottom: 1rem;
     }
     
     .card-title {
         color: #1f2937;
-        font-size: 1.3rem;
+        font-size: 1.2rem;
         font-weight: 600;
         margin-bottom: 1rem;
         display: flex;
@@ -402,6 +428,19 @@ st.markdown("""
         font-weight: 500 !important;
     }
     
+    /* Compact camera input */
+    .stCameraInput > div {
+        max-width: 280px !important;
+        margin: 0 auto !important;
+    }
+    
+    .stCameraInput img {
+        max-width: 280px !important;
+        max-height: 350px !important;
+        object-fit: contain !important;
+        border-radius: 8px !important;
+    }
+    
     /* Hide Streamlit elements */
     .stDeployButton {
         display: none;
@@ -417,6 +456,16 @@ st.markdown("""
     
     .css-1avcm0n {
         background-color: #f8f9fa;
+    }
+    
+    /* Compact tabs */
+    .stTabs [data-baseweb="tab-list"] {
+        justify-content: center;
+    }
+    
+    .stTabs [data-baseweb="tab"] {
+        padding: 0.5rem 1rem !important;
+        font-size: 0.9rem !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -569,7 +618,7 @@ def main():
             fast_mode = st.checkbox("Fast Mode", value=True, help="Enable for faster processing")
     
     # Upload sections
-    col1, col2 = st.columns([1, 1], gap="large")
+    col1, col2 = st.columns([1, 1], gap="medium")
     
     with col1:
         st.markdown("""
@@ -602,7 +651,7 @@ def main():
             if person_file:
                 st.session_state.person_image = Image.open(person_file)
         
-        # Display person image if available
+        # Display person image if available (compact size)
         if st.session_state.person_image:
             st.image(st.session_state.person_image, caption="Person Image", use_column_width=True, output_format="PNG")
     
@@ -614,7 +663,7 @@ def main():
         </div>
         """, unsafe_allow_html=True)
         
-        # Load and display the fixed garment image
+        # Load and display the fixed garment image (compact size)
         garment_image = load_garment_image()
         if garment_image:
             st.image(garment_image, caption="Selected Garment - Traditional Top", use_column_width=True, output_format="PNG")
@@ -741,15 +790,18 @@ def main():
         </div>
         """, unsafe_allow_html=True)
         
-        # Display result in center
+        # Display result in center with compact size
         col_result = st.columns([1, 2, 1])
         with col_result[1]:
+            # Apply special CSS class for result image
+            st.markdown('<div class="result-image">', unsafe_allow_html=True)
             st.image(
                 st.session_state.tryon_result, 
                 caption="Virtual Try-On Result", 
                 use_column_width=True,
                 output_format="PNG"
             )
+            st.markdown('</div>', unsafe_allow_html=True)
             
             # Download button
             buf = BytesIO()
