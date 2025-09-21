@@ -238,6 +238,121 @@ st.markdown("""
         border-radius: 8px;
     }
     
+    /* Fix text visibility and contrast */
+    .stApp, .stApp > div {
+        color: #1f2937 !important;
+    }
+    
+    .stMarkdown, .stMarkdown > div {
+        color: #1f2937 !important;
+    }
+    
+    .stText, .stCaption {
+        color: #4b5563 !important;
+    }
+    
+    .stFileUploader label {
+        color: #1f2937 !important;
+        font-weight: 500 !important;
+    }
+    
+    .stFileUploader div[data-testid="stFileUploaderDropzone"] {
+        background-color: #f9fafb !important;
+        border: 2px dashed #9333ea !important;
+        border-radius: 8px !important;
+    }
+    
+    .stFileUploader div[data-testid="stFileUploaderDropzone"] > div {
+        color: #6b7280 !important;
+    }
+    
+    .stButton button {
+        background: linear-gradient(135deg, #9333ea 0%, #7c3aed 100%) !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 8px !important;
+        padding: 0.75rem 2rem !important;
+        font-weight: 600 !important;
+        font-size: 1rem !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    .stButton button:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 12px rgba(147, 51, 234, 0.3) !important;
+    }
+    
+    .stButton button:disabled {
+        background: #d1d5db !important;
+        color: #9ca3af !important;
+        transform: none !important;
+        box-shadow: none !important;
+    }
+    
+    .stTextInput label, .stCheckbox label {
+        color: #1f2937 !important;
+        font-weight: 500 !important;
+    }
+    
+    .stTextInput > div > div > input {
+        background-color: white !important;
+        border: 2px solid #e5e7eb !important;
+        border-radius: 6px !important;
+        color: #1f2937 !important;
+    }
+    
+    .stTextInput > div > div > input:focus {
+        border-color: #9333ea !important;
+        box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.1) !important;
+    }
+    
+    .stCheckbox > label > div {
+        color: #1f2937 !important;
+    }
+    
+    .stExpander details summary {
+        background-color: white !important;
+        color: #1f2937 !important;
+        font-weight: 500 !important;
+        border: 1px solid #e5e7eb !important;
+        border-radius: 8px !important;
+    }
+    
+    .stExpander details[open] {
+        border: 1px solid #e5e7eb !important;
+        border-radius: 8px !important;
+    }
+    
+    .stExpander details[open] > div {
+        background-color: white !important;
+        color: #1f2937 !important;
+    }
+    
+    .stProgress > div > div {
+        background-color: #f3f4f6 !important;
+    }
+    
+    .stProgress > div > div > div {
+        background: linear-gradient(135deg, #9333ea 0%, #7c3aed 100%) !important;
+    }
+    
+    .stSuccess, .stError, .stWarning, .stInfo {
+        color: #1f2937 !important;
+    }
+    
+    .stDownloadButton button {
+        background: white !important;
+        color: #9333ea !important;
+        border: 2px solid #9333ea !important;
+        border-radius: 8px !important;
+        font-weight: 600 !important;
+    }
+    
+    .stDownloadButton button:hover {
+        background: #9333ea !important;
+        color: white !important;
+    }
+    
     /* Hide Streamlit elements */
     .stDeployButton {
         display: none;
