@@ -371,12 +371,10 @@ st.markdown("""
         color: white !important;
         border: none !important;
         border-radius: 8px !important;
-        padding: 1rem 3rem !important;
+        padding: 0.75rem 2rem !important;
         font-weight: 600 !important;
-        font-size: 1.1rem !important;
+        font-size: 1rem !important;
         transition: all 0.3s ease !important;
-        width: 100% !important;
-        min-height: 3rem !important;
     }
     
     .stButton button:hover {
@@ -555,6 +553,10 @@ def check_job_status(api_key, status_url):
 
 def get_result_image(result_data):
     """Extract image from result data"""
+    # Debug: Print available keys
+    available_keys = list(result_data.keys()) if result_data else []
+    st.write(f"Debug - Available keys in result: {available_keys}")
+    
     # Try different possible image keys
     image_keys = ["imageUrl", "image_url", "resultUrl", "result_url", "outputUrl", "output_url"]
     b64_keys = ["imageBase64", "image_base64", "resultBase64", "result_base64", "outputBase64", "output_base64", "image", "result"]
@@ -563,17 +565,21 @@ def get_result_image(result_data):
     for key in image_keys:
         if key in result_data and result_data[key]:
             image_url = result_data[key]
+            st.write(f"Debug - Found image URL: {image_url}")
             try:
                 response = requests.get(image_url)
                 if response.status_code == 200:
                     return Image.open(BytesIO(response.content))
+                else:
+                    st.write(f"Debug - Failed to fetch from URL {image_url}: {response.status_code}")
             except Exception as e:
-                continue
+                st.write(f"Debug - Error fetching from URL {image_url}: {str(e)}")
     
     # Try Base64-based image retrieval
     for key in b64_keys:
         if key in result_data and result_data[key]:
             b64_data = result_data[key]
+            st.write(f"Debug - Found base64 data for key: {key}")
             try:
                 # Remove data URL prefix if present
                 if b64_data.startswith('data:image'):
@@ -582,7 +588,11 @@ def get_result_image(result_data):
                 image_data = base64.b64decode(b64_data)
                 return Image.open(BytesIO(image_data))
             except Exception as e:
-                continue
+                st.write(f"Debug - Error decoding base64 for key {key}: {str(e)}")
+    
+    # If no image found, print the entire result for debugging
+    st.write("Debug - Full result data:")
+    st.json(result_data)
     
     return None
 
@@ -655,8 +665,9 @@ def main():
             st.image(
                 st.session_state.person_image, 
                 caption="Your Photo", 
-                use_container_width=True, 
-                output_format="PNG"
+                use_column_width=True, 
+                output_format="PNG",
+                clamp=True
             )
     
     # Column 2: Garment Image
@@ -672,8 +683,9 @@ def main():
             st.image(
                 garment_image, 
                 caption="Garment", 
-                use_container_width=True, 
-                output_format="PNG"
+                use_column_width=True, 
+                output_format="PNG",
+                clamp=True
             )
         else:
             st.error("Failed to load garment image")
@@ -691,8 +703,9 @@ def main():
             st.image(
                 st.session_state.tryon_result, 
                 caption="Try-On Result", 
-                use_container_width=True,
-                output_format="PNG"
+                use_column_width=True,
+                output_format="PNG",
+                clamp=True
             )
             
             # Download button
@@ -714,19 +727,15 @@ def main():
             </div>
             """, unsafe_allow_html=True)
     
-    # Try-on button (full width, centered)
+    # Try-on button (full width)
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # Center the button with columns
-    col_btn1, col_btn2, col_btn3 = st.columns([1, 2, 1])
-    
-    with col_btn2:
-        if st.button(
-            "🚀 Generate Virtual Try-On", 
-            disabled=not (st.session_state.person_image and garment_image and api_key and not st.session_state.processing),
-            type="primary",
-            use_container_width=True
-        ):
+    if st.button(
+        "🚀 Generate Virtual Try-On", 
+        disabled=not (st.session_state.person_image and garment_image and api_key and not st.session_state.processing),
+        type="primary",
+        use_container_width=True
+    ):
         if st.session_state.person_image and garment_image and api_key:
             st.session_state.processing = True
             st.session_state.tryon_result = None
@@ -792,6 +801,7 @@ def main():
                             raise e
                         else:
                             # If it's a network/API error, continue polling
+                            st.warning(f"Status check error (will retry): {str(e)}")
                             continue
                 
                 if result_json is None:
@@ -800,6 +810,7 @@ def main():
                 progress_bar.progress(100)
                 
                 # Get result image
+                st.write("Debug - Attempting to extract image from result...")
                 result_image = get_result_image(result_json)
                 
                 if result_image:
@@ -812,7 +823,9 @@ def main():
                     time.sleep(1)  # Small delay to ensure state is saved
                     st.rerun()
                 else:
-                    st.error("❌ No image found in the result.")
+                    st.error("❌ No image found in the result. Check the debug information above.")
+                    st.write("Full API response:")
+                    st.json(result_json)
             
             except Exception as e:
                 with status_placeholder.container():
