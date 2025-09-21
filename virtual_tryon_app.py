@@ -610,7 +610,7 @@ def main():
         with col_api1:
             api_key = st.text_input(
                 "API Key", 
-                value="ta_fce0b1a247b9437ea1b3785e1718724e",
+                value="ta_a06aab8b3656461eb3333da259f2c419",
                 type="password",
                 help="Enter your Try-On API key"
             )
