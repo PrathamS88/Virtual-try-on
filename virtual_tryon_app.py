@@ -883,17 +883,6 @@ def main():
             """, unsafe_allow_html=True)
     
     # Info section
-    if not st.session_state.tryon_result:
-        st.markdown("<br>", unsafe_allow_html=True)
-        st.markdown("""
-        <div class="info-card">
-            <strong>How it works:</strong><br>
-            1. Upload your photo in the first column (camera or file)<br>
-            2. The traditional garment is pre-selected in the middle column<br>
-            3. Click "Generate Try-On" at the top and wait for processing<br>
-            4. The result will appear in the third column for download!
-        </div>
-        """, unsafe_allow_html=True)
     
     # Next steps section (only show when result is available)
     if st.session_state.tryon_result:
