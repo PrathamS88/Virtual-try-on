@@ -75,8 +75,25 @@ st.markdown("""
         box-shadow: 0 4px 12px rgba(147, 51, 234, 0.15);
     }
     
+    .garment-card {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+        border: 2px solid #34d399;
+        text-align: center;
+    }
+    
     .upload-title {
         color: #9333ea;
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+    
+    .garment-title {
+        color: #34d399;
         font-size: 1.2rem;
         font-weight: 600;
         margin-bottom: 0.5rem;
@@ -86,6 +103,33 @@ st.markdown("""
         color: #6b7280;
         font-size: 0.9rem;
         margin-bottom: 1rem;
+    }
+    
+    .camera-options {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin: 1rem 0;
+    }
+    
+    .camera-btn {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        border: none;
+        border-radius: 50px;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-decoration: none;
+    }
+    
+    .camera-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
     }
     
     .result-card {
@@ -353,6 +397,11 @@ st.markdown("""
         color: white !important;
     }
     
+    .stCameraInput label {
+        color: #1f2937 !important;
+        font-weight: 500 !important;
+    }
+    
     /* Hide Streamlit elements */
     .stDeployButton {
         display: none;
@@ -377,6 +426,24 @@ if 'tryon_result' not in st.session_state:
     st.session_state.tryon_result = None
 if 'processing' not in st.session_state:
     st.session_state.processing = False
+if 'person_image' not in st.session_state:
+    st.session_state.person_image = None
+
+# Fixed garment image URL
+GARMENT_IMAGE_URL = "https://raw.githubusercontent.com/PrathamS88/Virtual-try-on/main/Photos/BBGJ-1108-014_2_copy.webp"
+
+def load_garment_image():
+    """Load the fixed garment image from GitHub"""
+    try:
+        response = requests.get(GARMENT_IMAGE_URL)
+        if response.status_code == 200:
+            return Image.open(BytesIO(response.content))
+        else:
+            st.error(f"Failed to load garment image: HTTP {response.status_code}")
+            return None
+    except Exception as e:
+        st.error(f"Error loading garment image: {str(e)}")
+        return None
 
 def submit_tryon_job(api_key, person_image, garment_image, fast_mode=True):
     """Submit try-on job to API"""
@@ -508,50 +575,62 @@ def main():
         st.markdown("""
         <div class="upload-card">
             <div class="upload-title">👤 Upload Person Image</div>
-            <div class="upload-subtitle">Click or drag & drop to upload a person's photo</div>
+            <div class="upload-subtitle">Choose how you want to add your photo</div>
         </div>
         """, unsafe_allow_html=True)
         
-        person_file = st.file_uploader(
-            "Choose person image",
-            type=['png', 'jpg', 'jpeg', 'webp'],
-            key="person",
-            label_visibility="collapsed"
-        )
+        # Camera and Upload options
+        tab1, tab2 = st.tabs(["📷 Camera", "📁 Upload File"])
         
-        if person_file:
-            person_image = Image.open(person_file)
-            st.image(person_image, caption="Person Image", use_column_width=True, output_format="PNG")
+        with tab1:
+            st.markdown("**Take a photo with your camera:**")
+            camera_image = st.camera_input(
+                "Take a photo",
+                label_visibility="collapsed"
+            )
+            if camera_image:
+                st.session_state.person_image = Image.open(camera_image)
+        
+        with tab2:
+            st.markdown("**Or upload an image file:**")
+            person_file = st.file_uploader(
+                "Choose person image",
+                type=['png', 'jpg', 'jpeg', 'webp'],
+                key="person",
+                label_visibility="collapsed"
+            )
+            if person_file:
+                st.session_state.person_image = Image.open(person_file)
+        
+        # Display person image if available
+        if st.session_state.person_image:
+            st.image(st.session_state.person_image, caption="Person Image", use_column_width=True, output_format="PNG")
     
     with col2:
         st.markdown("""
-        <div class="upload-card">
-            <div class="upload-title">👗 Upload Garment Image</div>
-            <div class="upload-subtitle">Click or drag & drop to upload clothing item</div>
+        <div class="garment-card">
+            <div class="garment-title">👗 Selected Garment</div>
+            <div class="upload-subtitle">This beautiful garment will be virtually tried on</div>
         </div>
         """, unsafe_allow_html=True)
         
-        garment_file = st.file_uploader(
-            "Choose garment image",
-            type=['png', 'jpg', 'jpeg', 'webp'],
-            key="garment",
-            label_visibility="collapsed"
-        )
-        
-        if garment_file:
-            garment_image = Image.open(garment_file)
-            st.image(garment_image, caption="Garment Image", use_column_width=True, output_format="PNG")
+        # Load and display the fixed garment image
+        garment_image = load_garment_image()
+        if garment_image:
+            st.image(garment_image, caption="Selected Garment - Traditional Top", use_column_width=True, output_format="PNG")
+        else:
+            st.error("Failed to load the garment image. Please check your internet connection.")
     
     # Try-on button
     st.markdown("<br>", unsafe_allow_html=True)
     
     if st.button(
         "🚀 Generate Virtual Try-On", 
-        disabled=not (person_file and garment_file and api_key and not st.session_state.processing),
+        disabled=not (st.session_state.person_image and garment_image and api_key and not st.session_state.processing),
         type="primary",
         use_container_width=True
     ):
-        if person_file and garment_file and api_key:
+        if st.session_state.person_image and garment_image and api_key:
             st.session_state.processing = True
             st.session_state.tryon_result = None
             
@@ -569,10 +648,7 @@ def main():
                     progress_bar = st.progress(0)
                 
                 # Submit job
-                person_image = Image.open(person_file)
-                garment_image = Image.open(garment_file)
-                
-                job_response = submit_tryon_job(api_key, person_image, garment_image, fast_mode)
+                job_response = submit_tryon_job(api_key, st.session_state.person_image, garment_image, fast_mode)
                 job_id = job_response.get("jobId")
                 status_url = job_response.get("statusUrl")
                 
@@ -695,7 +771,7 @@ def main():
                 <div class="steps-title">Based on the AI review, consider these actions:</div>
                 <div class="step-item">Review the generated try-on result for accuracy</div>
                 <div class="step-item">Download the image if satisfied with the result</div>
-                <div class="step-item">Try different garments or poses for more variations</div>
+                <div class="step-item">Try different poses or lighting for more variations</div>
                 <div class="step-item">Use the result for your product listings or marketing</div>
             </div>
         </div>
@@ -707,8 +783,8 @@ def main():
         st.markdown("""
         <div class="info-card">
             <strong>How it works:</strong><br>
-            1. Upload a clear photo of a person<br>
-            2. Upload the clothing item you want to try on<br>
+            1. Take a photo with your camera or upload a clear photo of yourself<br>
+            2. The selected traditional garment will be virtually tried on<br>
             3. Click "Generate Virtual Try-On" and wait for the AI to process<br>
             4. Download your result when ready!
         </div>
