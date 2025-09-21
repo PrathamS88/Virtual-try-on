@@ -62,9 +62,9 @@ st.markdown("""
     .upload-card {
         background: white;
         border-radius: 12px;
-        padding: 1.5rem;
+        padding: 1rem;
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        margin-bottom: 1.5rem;
+        margin-bottom: 1rem;
         border: 2px dashed #9333ea;
         text-align: center;
         transition: all 0.3s ease;
@@ -79,9 +79,9 @@ st.markdown("""
     .garment-card {
         background: white;
         border-radius: 12px;
-        padding: 1.5rem;
+        padding: 1rem;
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        margin-bottom: 1.5rem;
+        margin-bottom: 1rem;
         border: 2px solid #34d399;
         text-align: center;
         height: fit-content;
@@ -137,9 +137,9 @@ st.markdown("""
     .result-card {
         background: white;
         border-radius: 12px;
-        padding: 1.5rem;
+        padding: 1rem;
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        margin-bottom: 1.5rem;
+        margin-bottom: 1rem;
         border: 2px solid #f59e0b;
         text-align: center;
         height: fit-content;
@@ -249,9 +249,19 @@ st.markdown("""
         border-radius: 8px;
         box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         max-width: 100%;
-        height: 250px;
+        height: 180px;
         object-fit: cover;
         width: 100%;
+    }
+    
+    /* Override Streamlit image styles to make them smaller */
+    .stImage > img {
+        max-height: 180px !important;
+        object-fit: contain !important;
+    }
+    
+    .stImage {
+        max-height: 180px !important;
     }
     
     .info-card {
@@ -309,8 +319,8 @@ st.markdown("""
     .three-column-layout {
         display: grid;
         grid-template-columns: 1fr 1fr 1fr;
-        gap: 1.5rem;
-        margin-bottom: 2rem;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
     }
     
     .column-header {
