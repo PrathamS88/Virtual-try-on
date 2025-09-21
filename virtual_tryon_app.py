@@ -62,12 +62,13 @@ st.markdown("""
     .upload-card {
         background: white;
         border-radius: 12px;
-        padding: 2rem;
+        padding: 1.5rem;
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        margin-bottom: 2rem;
+        margin-bottom: 1.5rem;
         border: 2px dashed #9333ea;
         text-align: center;
         transition: all 0.3s ease;
+        height: fit-content;
     }
     
     .upload-card:hover {
@@ -78,30 +79,31 @@ st.markdown("""
     .garment-card {
         background: white;
         border-radius: 12px;
-        padding: 2rem;
+        padding: 1.5rem;
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        margin-bottom: 2rem;
+        margin-bottom: 1.5rem;
         border: 2px solid #34d399;
         text-align: center;
+        height: fit-content;
     }
     
     .upload-title {
         color: #9333ea;
-        font-size: 1.2rem;
+        font-size: 1.1rem;
         font-weight: 600;
         margin-bottom: 0.5rem;
     }
     
     .garment-title {
         color: #34d399;
-        font-size: 1.2rem;
+        font-size: 1.1rem;
         font-weight: 600;
         margin-bottom: 0.5rem;
     }
     
     .upload-subtitle {
         color: #6b7280;
-        font-size: 0.9rem;
+        font-size: 0.85rem;
         margin-bottom: 1rem;
     }
     
@@ -135,9 +137,19 @@ st.markdown("""
     .result-card {
         background: white;
         border-radius: 12px;
-        padding: 2rem;
+        padding: 1.5rem;
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        margin-bottom: 2rem;
+        margin-bottom: 1.5rem;
+        border: 2px solid #f59e0b;
+        text-align: center;
+        height: fit-content;
+    }
+    
+    .result-title {
+        color: #f59e0b;
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
     }
     
     .card-title {
@@ -229,6 +241,17 @@ st.markdown("""
         box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         max-width: 100%;
         height: auto;
+        max-height: 300px;
+        object-fit: contain;
+    }
+    
+    .compact-image {
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        max-width: 100%;
+        height: 250px;
+        object-fit: cover;
+        width: 100%;
     }
     
     .info-card {
@@ -280,6 +303,29 @@ st.markdown("""
         height: 100%;
         transition: width 0.3s ease;
         border-radius: 8px;
+    }
+    
+    /* Compact layout styles */
+    .three-column-layout {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .column-header {
+        text-align: center;
+        margin-bottom: 1rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #1f2937;
+    }
+    
+    @media (max-width: 768px) {
+        .three-column-layout {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
     }
     
     /* Fix text visibility and contrast */
@@ -568,33 +614,35 @@ def main():
         with col_api2:
             fast_mode = st.checkbox("Fast Mode", value=True, help="Enable for faster processing")
     
-    # Upload sections
-    col1, col2 = st.columns([1, 1], gap="large")
+    # Load garment image
+    garment_image = load_garment_image()
     
+    # Three-column layout for compact display
+    col1, col2, col3 = st.columns(3, gap="large")
+    
+    # Column 1: Person Image Upload
     with col1:
         st.markdown("""
         <div class="upload-card">
             <div class="upload-title">👤 Upload Person Image</div>
-            <div class="upload-subtitle">Choose how you want to add your photo</div>
+            <div class="upload-subtitle">Take a photo or upload file</div>
         </div>
         """, unsafe_allow_html=True)
         
-        # Camera and Upload options
-        tab1, tab2 = st.tabs(["📷 Camera", "📁 Upload File"])
+        # Camera and Upload options in tabs
+        tab1, tab2 = st.tabs(["📷 Camera", "📁 Upload"])
         
         with tab1:
-            st.markdown("**Take a photo with your camera:**")
             camera_image = st.camera_input(
-                "Take a photo",
+                "Take photo",
                 label_visibility="collapsed"
             )
             if camera_image:
                 st.session_state.person_image = Image.open(camera_image)
         
         with tab2:
-            st.markdown("**Or upload an image file:**")
             person_file = st.file_uploader(
-                "Choose person image",
+                "Choose image",
                 type=['png', 'jpg', 'jpeg', 'webp'],
                 key="person",
                 label_visibility="collapsed"
@@ -604,24 +652,72 @@ def main():
         
         # Display person image if available
         if st.session_state.person_image:
-            st.image(st.session_state.person_image, caption="Person Image", use_column_width=True, output_format="PNG")
+            st.image(
+                st.session_state.person_image, 
+                caption="Your Photo", 
+                use_column_width=True, 
+                output_format="PNG",
+                clamp=True
+            )
     
+    # Column 2: Garment Image
     with col2:
         st.markdown("""
         <div class="garment-card">
             <div class="garment-title">👗 Selected Garment</div>
-            <div class="upload-subtitle">This beautiful garment will be virtually tried on</div>
+            <div class="upload-subtitle">Traditional Top</div>
         </div>
         """, unsafe_allow_html=True)
         
-        # Load and display the fixed garment image
-        garment_image = load_garment_image()
         if garment_image:
-            st.image(garment_image, caption="Selected Garment - Traditional Top", use_column_width=True, output_format="PNG")
+            st.image(
+                garment_image, 
+                caption="Garment", 
+                use_column_width=True, 
+                output_format="PNG",
+                clamp=True
+            )
         else:
-            st.error("Failed to load the garment image. Please check your internet connection.")
+            st.error("Failed to load garment image")
     
-    # Try-on button
+    # Column 3: Result Image
+    with col3:
+        st.markdown("""
+        <div class="result-card">
+            <div class="result-title">✨ AI Result</div>
+            <div class="upload-subtitle">Generated try-on</div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        if st.session_state.tryon_result:
+            st.image(
+                st.session_state.tryon_result, 
+                caption="Try-On Result", 
+                use_column_width=True,
+                output_format="PNG",
+                clamp=True
+            )
+            
+            # Download button
+            buf = BytesIO()
+            st.session_state.tryon_result.save(buf, format='PNG')
+            st.download_button(
+                label="📥 Download",
+                data=buf.getvalue(),
+                file_name="tryon_result.png",
+                mime="image/png",
+                use_container_width=True,
+                type="secondary"
+            )
+        else:
+            st.markdown("""
+            <div style="text-align: center; padding: 2rem; color: #6b7280;">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">🎭</div>
+                <div>Result will appear here</div>
+            </div>
+            """, unsafe_allow_html=True)
+    
+    # Try-on button (full width)
     st.markdown("<br>", unsafe_allow_html=True)
     
     if st.button(
@@ -712,7 +808,7 @@ def main():
                     with status_placeholder.container():
                         st.markdown('<div class="status-completed">✅ Try-on completed successfully!</div>', 
                                   unsafe_allow_html=True)
-                    st.success("🎉 Virtual try-on completed! Check the result below.")
+                    st.success("🎉 Virtual try-on completed! Check the result in the third column.")
                     # Force refresh the page to show the result
                     time.sleep(1)  # Small delay to ensure state is saved
                     st.rerun()
@@ -732,63 +828,30 @@ def main():
                 if 'progress_bar' in locals():
                     progress_bar.empty()
     
-    # Results section
-    if st.session_state.tryon_result:
-        st.markdown("<br>", unsafe_allow_html=True)
-        st.markdown("""
-        <div class="result-card">
-            <div class="card-title">✨ AI Generated Try-On Result</div>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        # Display result in center
-        col_result = st.columns([1, 2, 1])
-        with col_result[1]:
-            st.image(
-                st.session_state.tryon_result, 
-                caption="Virtual Try-On Result", 
-                use_column_width=True,
-                output_format="PNG"
-            )
-            
-            # Download button
-            buf = BytesIO()
-            st.session_state.tryon_result.save(buf, format='PNG')
-            st.download_button(
-                label="📥 Download Result",
-                data=buf.getvalue(),
-                file_name="tryon_result.png",
-                mime="image/png",
-                use_container_width=True,
-                type="secondary"
-            )
-        
-        # Next steps section
-        st.markdown("""
-        <div class="result-card">
-            <div class="card-title">📋 Next Steps</div>
-            <div class="next-steps">
-                <div class="steps-title">Based on the AI review, consider these actions:</div>
-                <div class="step-item">Review the generated try-on result for accuracy</div>
-                <div class="step-item">Download the image if satisfied with the result</div>
-                <div class="step-item">Try different poses or lighting for more variations</div>
-                <div class="step-item">Use the result for your product listings or marketing</div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    else:
-        # Info card when no result yet
+    # Info section
+    if not st.session_state.tryon_result:
         st.markdown("<br>", unsafe_allow_html=True)
         st.markdown("""
         <div class="info-card">
             <strong>How it works:</strong><br>
-            1. Take a photo with your camera or upload a clear photo of yourself<br>
-            2. The selected traditional garment will be virtually tried on<br>
-            3. Click "Generate Virtual Try-On" and wait for the AI to process<br>
-            4. Download your result when ready!
+            1. Upload your photo in the first column (camera or file)<br>
+            2. The traditional garment is pre-selected in the middle column<br>
+            3. Click "Generate Virtual Try-On" and wait for processing<br>
+            4. The result will appear in the third column for download!
         </div>
         """, unsafe_allow_html=True)
+    
+    # Next steps section (only show when result is available)
+    if st.session_state.tryon_result:
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown("""
+        <div class="next-steps">
+            <div class="steps-title">📋 Next Steps:</div>
+            <div class="step-item">Review the generated try-on result for accuracy</div>
+            <div class="step-item">Download the image if satisfied with the result</div>
+            <div class="step-item">Try different poses or lighting for more variations</div>
+            <div class="step-item">Use the result for your product listings or marketing</div>
+        </div>
     
     st.markdown('</div>', unsafe_allow_html=True)  # Close main container
 
