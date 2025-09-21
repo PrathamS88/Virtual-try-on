@@ -371,10 +371,12 @@ st.markdown("""
         color: white !important;
         border: none !important;
         border-radius: 8px !important;
-        padding: 0.75rem 2rem !important;
+        padding: 1rem 3rem !important;
         font-weight: 600 !important;
-        font-size: 1rem !important;
+        font-size: 1.1rem !important;
         transition: all 0.3s ease !important;
+        width: 100% !important;
+        min-height: 3rem !important;
     }
     
     .stButton button:hover {
@@ -712,15 +714,19 @@ def main():
             </div>
             """, unsafe_allow_html=True)
     
-    # Try-on button (full width)
+    # Try-on button (full width, centered)
     st.markdown("<br>", unsafe_allow_html=True)
     
-    if st.button(
-        "🚀 Generate Virtual Try-On", 
-        disabled=not (st.session_state.person_image and garment_image and api_key and not st.session_state.processing),
-        type="primary",
-        use_container_width=True
-    ):
+    # Center the button with columns
+    col_btn1, col_btn2, col_btn3 = st.columns([1, 2, 1])
+    
+    with col_btn2:
+        if st.button(
+            "🚀 Generate Virtual Try-On", 
+            disabled=not (st.session_state.person_image and garment_image and api_key and not st.session_state.processing),
+            type="primary",
+            use_container_width=True
+        ):
         if st.session_state.person_image and garment_image and api_key:
             st.session_state.processing = True
             st.session_state.tryon_result = None
