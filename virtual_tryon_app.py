@@ -62,7 +62,7 @@ st.markdown("""
     .upload-card {
         background: white;
         border-radius: 12px;
-        padding: 1rem;
+        padding: 0.8rem;
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         margin-bottom: 1rem;
         border: 2px dashed #9333ea;
@@ -79,7 +79,7 @@ st.markdown("""
     .garment-card {
         background: white;
         border-radius: 12px;
-        padding: 1rem;
+        padding: 0.8rem;
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         margin-bottom: 1rem;
         border: 2px solid #34d399;
@@ -137,7 +137,7 @@ st.markdown("""
     .result-card {
         background: white;
         border-radius: 12px;
-        padding: 1rem;
+        padding: 0.8rem;
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         margin-bottom: 1rem;
         border: 2px solid #f59e0b;
@@ -260,7 +260,7 @@ st.markdown("""
         box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         max-width: 100%;
         height: auto;
-        max-height: 300px;
+        max-height: 120px;
         object-fit: contain;
     }
     
@@ -268,19 +268,19 @@ st.markdown("""
         border-radius: 8px;
         box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         max-width: 100%;
-        height: 180px;
+        height: 120px;
         object-fit: cover;
         width: 100%;
     }
     
     /* Override Streamlit image styles to make them smaller */
     .stImage > img {
-        max-height: 180px !important;
+        max-height: 120px !important;
         object-fit: contain !important;
     }
     
     .stImage {
-        max-height: 180px !important;
+        max-height: 120px !important;
     }
     
     .info-card {
@@ -876,24 +876,24 @@ def main():
             )
         else:
             st.markdown("""
-            <div style="text-align: center; padding: 2rem; color: #6b7280;">
-                <div style="font-size: 3rem; margin-bottom: 1rem;">🎭</div>
-                <div>Result will appear here</div>
+            <div style="text-align: center; padding: 1rem; color: #6b7280;">
+                <div style="font-size: 2rem; margin-bottom: 0.5rem;">🎭</div>
+                <div style="font-size: 0.85rem;">Result will appear here</div>
             </div>
             """, unsafe_allow_html=True)
     
     # Info section
-    #if not st.session_state.tryon_result:
-     #   st.markdown("<br>", unsafe_allow_html=True)
-      #  st.markdown("""
-       # <div class="info-card">
-        #    <strong>How it works:</strong><br>
-         #   1. Upload your photo in the first column (camera or file)<br>
-          #  2. The traditional garment is pre-selected in the middle column<br>
-           # 3. Click "Generate Try-On" at the top and wait for processing<br>
-            #4. The result will appear in the third column for download!
-       # </div>
-        #""", unsafe_allow_html=True)
+    if not st.session_state.tryon_result:
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown("""
+        <div class="info-card">
+            <strong>How it works:</strong><br>
+            1. Upload your photo in the first column (camera or file)<br>
+            2. The traditional garment is pre-selected in the middle column<br>
+            3. Click "Generate Try-On" at the top and wait for processing<br>
+            4. The result will appear in the third column for download!
+        </div>
+        """, unsafe_allow_html=True)
     
     # Next steps section (only show when result is available)
     if st.session_state.tryon_result:
