@@ -219,6 +219,25 @@ st.markdown("""
         box-shadow: 0 4px 12px rgba(147, 51, 234, 0.3);
     }
     
+    .small-button {
+        background: linear-gradient(135deg, #9333ea 0%, #7c3aed 100%);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 0.5rem 1rem;
+        font-weight: 500;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        min-width: 180px;
+        margin: 0.5rem 0;
+    }
+    
+    .small-button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(147, 51, 234, 0.3);
+    }
+    
     .secondary-button {
         background: white;
         color: #9333ea;
@@ -331,10 +350,27 @@ st.markdown("""
         color: #1f2937;
     }
     
+    .top-controls {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        padding: 1rem;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    
     @media (max-width: 768px) {
         .three-column-layout {
             grid-template-columns: 1fr;
             gap: 1rem;
+        }
+        
+        .top-controls {
+            flex-direction: column;
+            gap: 0.5rem;
         }
     }
     
@@ -370,16 +406,17 @@ st.markdown("""
         background: linear-gradient(135deg, #9333ea 0%, #7c3aed 100%) !important;
         color: white !important;
         border: none !important;
-        border-radius: 8px !important;
-        padding: 0.75rem 2rem !important;
-        font-weight: 600 !important;
-        font-size: 1rem !important;
+        border-radius: 6px !important;
+        padding: 0.5rem 1rem !important;
+        font-weight: 500 !important;
+        font-size: 0.9rem !important;
         transition: all 0.3s ease !important;
+        min-width: 180px !important;
     }
     
     .stButton button:hover {
-        transform: translateY(-2px) !important;
-        box-shadow: 0 4px 12px rgba(147, 51, 234, 0.3) !important;
+        transform: translateY(-1px) !important;
+        box-shadow: 0 2px 8px rgba(147, 51, 234, 0.3) !important;
     }
     
     .stButton button:disabled {
@@ -627,6 +664,124 @@ def main():
     # Load garment image
     garment_image = load_garment_image()
     
+    # Top controls section with centered small button
+    st.markdown("""
+    <div class="top-controls">
+        <span style="color: #6b7280; font-size: 0.9rem; margin-right: 1rem;">Ready to try on?</span>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Small centered try-on button at the top
+    col_btn1, col_btn2, col_btn3 = st.columns([1, 1, 1])
+    with col_btn2:
+        if st.button(
+            "🚀 Generate Try-On", 
+            disabled=not (st.session_state.person_image and garment_image and api_key and not st.session_state.processing),
+            type="primary",
+            key="small_tryon_btn"
+        ):
+            if st.session_state.person_image and garment_image and api_key:
+                st.session_state.processing = True
+                st.session_state.tryon_result = None
+                
+                try:
+                    # Show processing status
+                    status_placeholder = st.empty()
+                    progress_placeholder = st.empty()
+                    
+                    with status_placeholder.container():
+                        st.markdown('<div class="status-processing">🔄 Submitting try-on job...</div>', 
+                                  unsafe_allow_html=True)
+                    
+                    # Progress bar
+                    with progress_placeholder.container():
+                        progress_bar = st.progress(0)
+                    
+                    # Submit job
+                    job_response = submit_tryon_job(api_key, st.session_state.person_image, garment_image, fast_mode)
+                    job_id = job_response.get("jobId")
+                    status_url = job_response.get("statusUrl")
+                    
+                    progress_bar.progress(25)
+                    
+                    with status_placeholder.container():
+                        st.markdown(f'<div class="status-processing">⏳ Processing job {job_id}...</div>', 
+                                  unsafe_allow_html=True)
+                    
+                    # Poll for result indefinitely until completion
+                    poll_interval = 3
+                    elapsed = 0
+                    result_json = None
+                    
+                    while True:
+                        time.sleep(poll_interval)
+                        elapsed += poll_interval
+                        
+                        # Update progress (will cycle back after reaching 95%)
+                        progress = 25 + ((elapsed % 60) / 60) * 70
+                        progress_bar.progress(int(progress))
+                        
+                        with status_placeholder.container():
+                            st.markdown(f'<div class="status-processing">⏳ Processing job {job_id}... ({elapsed}s elapsed)</div>', 
+                                      unsafe_allow_html=True)
+                        
+                        try:
+                            resp_json = check_job_status(api_key, status_url)
+                            status = resp_json.get("status")
+                            
+                            if status == "completed":
+                                result_json = resp_json
+                                break
+                            elif status == "failed":
+                                error_msg = resp_json.get("error", "Unknown error")
+                                error_code = resp_json.get("errorCode", "")
+                                raise Exception(f"Try-on generation failed: {error_msg} (Code: {error_code})")
+                            
+                            # Continue polling for "processing" or other statuses
+                            
+                        except Exception as e:
+                            if "failed" in str(e).lower():
+                                # If it's a job failure, break the loop
+                                raise e
+                            else:
+                                # If it's a network/API error, continue polling
+                                st.warning(f"Status check error (will retry): {str(e)}")
+                                continue
+                    
+                    if result_json is None:
+                        raise Exception("Unexpected error: No result received")
+                    
+                    progress_bar.progress(100)
+                    
+                    # Get result image
+                    st.write("Debug - Attempting to extract image from result...")
+                    result_image = get_result_image(result_json)
+                    
+                    if result_image:
+                        st.session_state.tryon_result = result_image
+                        with status_placeholder.container():
+                            st.markdown('<div class="status-completed">✅ Try-on completed successfully!</div>', 
+                                      unsafe_allow_html=True)
+                        st.success("🎉 Virtual try-on completed! Check the result in the third column.")
+                        # Force refresh the page to show the result
+                        time.sleep(1)  # Small delay to ensure state is saved
+                        st.rerun()
+                    else:
+                        st.error("❌ No image found in the result. Check the debug information above.")
+                        st.write("Full API response:")
+                        st.json(result_json)
+                
+                except Exception as e:
+                    with status_placeholder.container():
+                        st.markdown(f'<div class="status-failed">❌ Error: {str(e)}</div>', 
+                                  unsafe_allow_html=True)
+                    st.error(f"Try-on failed: {str(e)}")
+                
+                finally:
+                    st.session_state.processing = False
+                    if 'progress_bar' in locals():
+                        progress_bar.empty()
+    
     # Three-column layout for compact display
     col1, col2, col3 = st.columns(3, gap="large")
     
@@ -727,117 +882,6 @@ def main():
             </div>
             """, unsafe_allow_html=True)
     
-    # Try-on button (full width)
-    st.markdown("<br>", unsafe_allow_html=True)
-    
-    if st.button(
-        "🚀 Generate Virtual Try-On", 
-        disabled=not (st.session_state.person_image and garment_image and api_key and not st.session_state.processing),
-        type="primary",
-        use_container_width=True
-    ):
-        if st.session_state.person_image and garment_image and api_key:
-            st.session_state.processing = True
-            st.session_state.tryon_result = None
-            
-            try:
-                # Show processing status
-                status_placeholder = st.empty()
-                progress_placeholder = st.empty()
-                
-                with status_placeholder.container():
-                    st.markdown('<div class="status-processing">🔄 Submitting try-on job...</div>', 
-                              unsafe_allow_html=True)
-                
-                # Progress bar
-                with progress_placeholder.container():
-                    progress_bar = st.progress(0)
-                
-                # Submit job
-                job_response = submit_tryon_job(api_key, st.session_state.person_image, garment_image, fast_mode)
-                job_id = job_response.get("jobId")
-                status_url = job_response.get("statusUrl")
-                
-                progress_bar.progress(25)
-                
-                with status_placeholder.container():
-                    st.markdown(f'<div class="status-processing">⏳ Processing job {job_id}...</div>', 
-                              unsafe_allow_html=True)
-                
-                # Poll for result indefinitely until completion
-                poll_interval = 3
-                elapsed = 0
-                result_json = None
-                
-                while True:
-                    time.sleep(poll_interval)
-                    elapsed += poll_interval
-                    
-                    # Update progress (will cycle back after reaching 95%)
-                    progress = 25 + ((elapsed % 60) / 60) * 70
-                    progress_bar.progress(int(progress))
-                    
-                    with status_placeholder.container():
-                        st.markdown(f'<div class="status-processing">⏳ Processing job {job_id}... ({elapsed}s elapsed)</div>', 
-                                  unsafe_allow_html=True)
-                    
-                    try:
-                        resp_json = check_job_status(api_key, status_url)
-                        status = resp_json.get("status")
-                        
-                        if status == "completed":
-                            result_json = resp_json
-                            break
-                        elif status == "failed":
-                            error_msg = resp_json.get("error", "Unknown error")
-                            error_code = resp_json.get("errorCode", "")
-                            raise Exception(f"Try-on generation failed: {error_msg} (Code: {error_code})")
-                        
-                        # Continue polling for "processing" or other statuses
-                        
-                    except Exception as e:
-                        if "failed" in str(e).lower():
-                            # If it's a job failure, break the loop
-                            raise e
-                        else:
-                            # If it's a network/API error, continue polling
-                            st.warning(f"Status check error (will retry): {str(e)}")
-                            continue
-                
-                if result_json is None:
-                    raise Exception("Unexpected error: No result received")
-                
-                progress_bar.progress(100)
-                
-                # Get result image
-                st.write("Debug - Attempting to extract image from result...")
-                result_image = get_result_image(result_json)
-                
-                if result_image:
-                    st.session_state.tryon_result = result_image
-                    with status_placeholder.container():
-                        st.markdown('<div class="status-completed">✅ Try-on completed successfully!</div>', 
-                                  unsafe_allow_html=True)
-                    st.success("🎉 Virtual try-on completed! Check the result in the third column.")
-                    # Force refresh the page to show the result
-                    time.sleep(1)  # Small delay to ensure state is saved
-                    st.rerun()
-                else:
-                    st.error("❌ No image found in the result. Check the debug information above.")
-                    st.write("Full API response:")
-                    st.json(result_json)
-            
-            except Exception as e:
-                with status_placeholder.container():
-                    st.markdown(f'<div class="status-failed">❌ Error: {str(e)}</div>', 
-                              unsafe_allow_html=True)
-                st.error(f"Try-on failed: {str(e)}")
-            
-            finally:
-                st.session_state.processing = False
-                if 'progress_bar' in locals():
-                    progress_bar.empty()
-    
     # Info section
     if not st.session_state.tryon_result:
         st.markdown("<br>", unsafe_allow_html=True)
@@ -846,7 +890,7 @@ def main():
             <strong>How it works:</strong><br>
             1. Upload your photo in the first column (camera or file)<br>
             2. The traditional garment is pre-selected in the middle column<br>
-            3. Click "Generate Virtual Try-On" and wait for processing<br>
+            3. Click "Generate Try-On" at the top and wait for processing<br>
             4. The result will appear in the third column for download!
         </div>
         """, unsafe_allow_html=True)
